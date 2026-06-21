@@ -1,0 +1,620 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>FCS Quiz Flashcards - June 2026</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@600;800;900&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --bg-question: #FFA2A2;
+            --bg-answer: #A2FFB3;
+            --font-color: #FFFFFF;
+            --font-answer-color: #1A3E22;
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+            user-select: none;
+        }
+
+        body {
+            font-family: 'Outfit', sans-serif;
+            background-color: var(--bg-question);
+            height: 100vh;
+            width: 100vw;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: space-between;
+            overflow: hidden;
+            transition: background-color 0.6s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+        }
+
+        /* Top Progress Bar Area */
+        .header-progress {
+            width: 100%;
+            padding: 20px 30px;
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+            z-index: 10;
+            color: #FFFFFF;
+        }
+
+        .meta-info {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            font-size: 1.1rem;
+            font-weight: 800;
+            letter-spacing: 0.05em;
+            text-transform: uppercase;
+            opacity: 0.9;
+        }
+
+        .progress-bar-bg {
+            width: 100%;
+            height: 12px;
+            background: rgba(255, 255, 255, 0.3);
+            border-radius: 6px;
+            overflow: hidden;
+        }
+
+        .progress-bar-fill {
+            height: 100%;
+            width: 0%;
+            background: #FFFFFF;
+            border-radius: 6px;
+            transition: width 0.3s ease;
+        }
+
+        /* Reel System Container */
+        .viewport {
+            flex: 1;
+            width: 100%;
+            position: relative;
+            overflow: hidden;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .reel-panel {
+            position: absolute;
+            width: 100%;
+            height: 100%;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            padding: 20px 40px;
+            text-align: center;
+            transition: transform 0.6s cubic-bezier(0.175, 0.885, 0.32, 1.275), opacity 0.4s ease;
+            cursor: pointer;
+        }
+
+        /* Initial positioning for standard reel flow */
+        .question-panel {
+            transform: translateY(0);
+            opacity: 1;
+            color: var(--font-color);
+        }
+
+        .answer-panel {
+            transform: translateY(100%);
+            opacity: 0;
+            color: var(--font-answer-color);
+        }
+
+        /* State: showing answer - yeet question up, pull answer up */
+        body.show-answer {
+            background-color: var(--bg-answer);
+        }
+
+        body.show-answer .question-panel {
+            transform: translateY(-100%);
+            opacity: 0;
+        }
+
+        body.show-answer .answer-panel {
+            transform: translateY(0);
+            opacity: 1;
+        }
+
+        /* Text Styles */
+        .category {
+            font-size: 1.2rem;
+            font-weight: 800;
+            text-transform: uppercase;
+            letter-spacing: 0.1em;
+            background: rgba(255, 255, 255, 0.2);
+            padding: 6px 16px;
+            border-radius: 20px;
+            margin-bottom: 25px;
+            display: inline-block;
+            color: inherit;
+        }
+
+        .text-display {
+            font-size: 2.5rem;
+            font-weight: 900;
+            line-height: 1.3;
+            max-width: 850px;
+            text-shadow: 0 4px 10px rgba(0,0,0,0.1);
+        }
+
+        .tip-tap {
+            margin-top: 35px;
+            font-size: 1rem;
+            font-weight: 600;
+            opacity: 0.8;
+            animation: pulse 2s infinite;
+            color: inherit;
+        }
+
+        /* Footer Navigation Area */
+        .footer-nav {
+            width: 100%;
+            max-width: 800px;
+            padding: 30px 40px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            z-index: 10;
+        }
+
+        .nav-btn {
+            background: rgba(255, 255, 255, 0.2);
+            border: none;
+            color: #FFFFFF;
+            padding: 15px 30px;
+            border-radius: 35px;
+            font-family: 'Outfit', sans-serif;
+            font-size: 1.2rem;
+            font-weight: 800;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        body.show-answer .nav-btn {
+            color: var(--font-answer-color);
+            background: rgba(0, 0, 0, 0.08);
+        }
+
+        body.show-answer .nav-btn:hover {
+            background: rgba(0, 0, 0, 0.15);
+        }
+
+        body.show-answer .header-progress {
+            color: var(--font-answer-color);
+        }
+
+        body.show-answer .progress-bar-bg {
+            background: rgba(0, 0, 0, 0.1);
+        }
+
+        body.show-answer .progress-bar-fill {
+            background: var(--font-answer-color);
+        }
+
+        .nav-btn:hover {
+            background: rgba(255, 255, 255, 0.35);
+            transform: scale(1.05);
+        }
+
+        .nav-btn:active {
+            transform: scale(0.95);
+        }
+
+        @keyframes pulse {
+            0% { opacity: 0.5; transform: scale(0.98); }
+            50% { opacity: 0.9; transform: scale(1.02); }
+            100% { opacity: 0.5; transform: scale(0.98); }
+        }
+
+        @media (max-width: 600px) {
+            .text-display {
+                font-size: 1.8rem;
+            }
+            .nav-btn {
+                padding: 12px 20px;
+                font-size: 1rem;
+            }
+            .category {
+                font-size: 0.9rem;
+            }
+        }
+    </style>
+</head>
+<body>
+
+    <!-- Progress Bar Section -->
+    <div class="header-progress">
+        <div class="meta-info">
+            <span id="topic-title">FCS Quiz Study Companion</span>
+            <span id="card-index">1 / 54</span>
+        </div>
+        <div class="progress-bar-bg">
+            <div id="progress-fill" class="progress-bar-fill"></div>
+        </div>
+    </div>
+
+    <!-- Active Card Display (Reel Viewport) -->
+    <div class="viewport" onclick="toggleAnswer()">
+        <!-- Question Panel -->
+        <div class="reel-panel question-panel" id="q-panel">
+            <span class="category" id="q-category">Category</span>
+            <div class="text-display" id="q-text">Question Loading...</div>
+            <div class="tip-tap">TAP CARD TO REVEAL ANSWER</div>
+        </div>
+
+        <!-- Answer Panel -->
+        <div class="reel-panel answer-panel" id="a-panel">
+            <span class="category" id="a-category">Category</span>
+            <div class="text-display" id="a-text">Answer Loading...</div>
+            <div class="tip-tap">TAP CARD TO VIEW QUESTION</div>
+        </div>
+    </div>
+
+    <!-- Navigation Buttons -->
+    <div class="footer-nav">
+        <button class="nav-btn" onclick="prevCard(event)">
+            &larr; PREV
+        </button>
+        <button class="nav-btn" onclick="nextCard(event)">
+            NEXT &rarr;
+        </button>
+    </div>
+
+    <script>
+        const flashcards = [
+            // --- Fish as a Food Source (Nutrition & Types) ---
+            {
+                q: "What is the average annual per capita fish consumption statistic mentioned?",
+                a: "Approximately 22.7 kg / capita.",
+                c: "Fish: General Stats"
+            },
+            {
+                q: "What percentage of daily protein requirements does seafood provide for the Sri Lankan population?",
+                a: "Roughly 48% of the daily protein requirements.",
+                c: "Fish: General Stats"
+            },
+            {
+                q: "What are the most widely consumed fish varieties in Sri Lanka?",
+                a: "Sardinella (Sardinella spp.), sprats, and various fresh/dried coastal and inland fish.",
+                c: "Fish: General Stats"
+            },
+            {
+                q: "What are the two main categories of seafood?",
+                a: "1. Finfish (with backbones)\n2. Shellfish (aquatic invertebrates with shells/exoskeletons).",
+                c: "Fish: Classification"
+            },
+            {
+                q: "How are finfish sub-classified?",
+                a: "By their habitat (Saltwater vs Freshwater) and fat content (Lean, Medium-Fat, Fatty).",
+                c: "Fish: Classification"
+            },
+            {
+                q: "Give examples of saltwater and freshwater finfish mentioned.",
+                a: "Saltwater: Tuna, Salmon, Cod, Mackerel.\nFreshwater: Trout, Catfish, Tilapia.",
+                c: "Fish: Classification"
+            },
+            {
+                q: "Define 'Lean Fish' and 'Fatty Fish' by fat percentage and characteristics.",
+                a: "Lean (White) Fish: Lower than 2% fat (e.g. Cod, Halibut, Haddock, Tilapia).\nFatty (Oily) Fish: 5% to 25% fat, rich in Omega-3s (e.g. Salmon, Mackerel, Sardines, Trout).",
+                c: "Fish: Classification"
+            },
+            {
+                q: "What is the nutritional composition range of the edible flesh of fish?",
+                a: "Water (66-81%), Protein (16-21%), Lipids/Fats (0.2-25%), Minerals (1-1.5%), Vitamins (A, D, E, B12), trace Carbohydrates.",
+                c: "Fish: Composition"
+            },
+            {
+                q: "What are the main health benefits of consuming fish lipids (EPA and DHA Omega-3s)?",
+                a: "Boosts heart health (lowers triglycerides), supports fetal brain development/cognition, improves eye health (retina component), and aids metabolic control.",
+                c: "Fish: Health Benefits"
+            },
+            {
+                q: "Match the local Sri Lankan names: 'Linna', 'Hurulla', and 'Balaya' to their English counterparts.",
+                a: "Linna: Mackerel\nHurulla: Herring\nBalaya: Tuna",
+                c: "Fish: Local Names"
+            },
+            {
+                q: "What is the cholesterol guideline for shellfish, and which has the highest level per 100g?",
+                a: "Safe in moderation. Shrimp/Prawns have the highest (~150-200 mg per 100g). Clams & Scallops have the lowest (~23-30 mg).",
+                c: "Fish: Cholesterol"
+            },
+
+            // --- Fish Biology & Environment ---
+            {
+                q: "Why is the carbohydrate content of white fish muscle negligible?",
+                a: "It is less than 1% (stored as glycogen) and quickly converted to lactate during anaerobic 'burst' swimming.",
+                c: "Fish: Carbohydrates"
+            },
+            {
+                q: "Contrast Red (dark) vs. White fish muscle tissue properties.",
+                a: "Red: Suited for sustained aerobic activity; rich in myoglobin, mitochondria, lipids, and capillaries.\nWhite: Suited for short, fast bursts; relies on glycolysis/anaerobic path.",
+                c: "Fish: Biology"
+            },
+            {
+                q: "Name 3 body shapes of bony fish built for different locomotion styles.",
+                a: "1. Slender/Fusiform (speed - e.g. Tuna)\n2. Eel-like/Elongate (undulation)\n3. Deep-bodied/Compressed (pectoral propulsion - e.g. Angelfish)",
+                c: "Fish: Anatomy"
+            },
+            {
+                q: "What are the names of the paired and unpaired fins in fish?",
+                a: "Paired: Pectoral and Pelvic.\nUnpaired: Caudal (tail), Dorsal (back), and Anal (belly).",
+                c: "Fish: Anatomy"
+            },
+            {
+                q: "What are the common measurements used to identify fish length?",
+                a: "Standard Length (to base of tail), Fork Length (to fork of tail), and Total Length (mouth shut, tail pinched).",
+                c: "Fish: Anatomy"
+            },
+            {
+                q: "What shape balances frictional drag, form resistance, and induced drag to yield lowest resistance?",
+                a: "Teardrop shape.",
+                c: "Fish: Hydrodynamics"
+            },
+            {
+                q: "How do scales affect gas exchange in fish?",
+                a: "Scales limit gas diffusion through the skin, forcing gas exchange to occur at the gill membranes.",
+                c: "Fish: Biology"
+            },
+            {
+                q: "Compare osmoregulation in freshwater vs. saltwater fish.",
+                a: "Freshwater: Hypertonic body gains water by osmosis, loses ions; urinates heavily.\nSaltwater: Hypotonic body loses water, gains ions; drinks seawater, excretes excess salt.",
+                c: "Fish: Osmoregulation"
+            },
+            {
+                q: "What sensory system allows fish to detect vibrations in the water?",
+                a: "The lateral line system (sensory structures running along the sides connected to the brain).",
+                c: "Fish: Sensory Systems"
+            },
+            {
+                q: "What are 'Ampullae of Lorenzini' and where are they found?",
+                a: "Electro-receptive sensory systems found in sharks and rays, sensitive to electric currents.",
+                c: "Fish: Sensory Systems"
+            },
+            {
+                q: "Define 'Anadromous' and 'Catadromous' migration cycles.",
+                a: "Anadromous: Live in sea as adults, migrate to fresh water to spawn (e.g. Salmon).\nCatadromous: Live in fresh water, migrate to sea to spawn (e.g. Eels).",
+                c: "Fish: Migration"
+            },
+            {
+                q: "What anatomical basis facilitates magnetotaxis (long-distance migration) in fish like tuna?",
+                a: "Magnetite in their bodies acting as a magnetic compass.",
+                c: "Fish: Migration"
+            },
+
+            // --- Meat Proteins & Dietary Fiber ---
+            {
+                q: "What are the two major components of plant dietary fiber?",
+                a: "1. Soluble Fiber (readily fermented in colon to short-chain fatty acids)\n2. Insoluble Fiber ('nature's broom', increases stool weight).",
+                c: "Meat/Diet: Fiber"
+            },
+            {
+                q: "List primary food sources for soluble and insoluble fiber.",
+                a: "Soluble: Legumes, sweet potatoes, oats, inside of apples/pears.\nInsoluble: Vegetable skins, whole grains, wheat/corn bran, nuts/seeds.",
+                c: "Meat/Diet: Fiber"
+            },
+            {
+                q: "Why are animal proteins considered 'complete' compared to plant proteins?",
+                a: "Animal proteins contain all 9 essential amino acids in ratios that match human needs.",
+                c: "Meat/Diet: Proteins"
+            },
+            {
+                q: "What is the Recommended Dietary Allowance (RDA) for daily protein intake in adults?",
+                a: "0.75 grams of protein per kilogram of body weight (typically 45g/day for women, 55g/day for men).",
+                c: "Meat/Diet: Proteins"
+            },
+            {
+                q: "What is the difference in absorption rates between Heme and Non-Heme iron?",
+                a: "Heme iron (animal sources) is absorbed at 7-35%.\nNon-heme iron (plant sources) is absorbed at only 2-20%.",
+                c: "Meat/Diet: Iron"
+            },
+            {
+                q: "How do tea flavonoids affect non-heme iron absorption, and how can it be improved?",
+                a: "Flavonoids reduce absorption by chelation. Adding Vitamin C (lemon/lime) or consuming tea 1 hour away from meals improves it.",
+                c: "Meat/Diet: Iron"
+            },
+            {
+                q: "What is the typical composition of lean meat?",
+                a: "Water (75.0%), Protein (18.5%), Lipids (3.0%), Non-protein nitrogenous substances (1.5%), Carbohydrates (1.0%), Inorganic constituents (1.0%).",
+                c: "Meat: Composition"
+            },
+
+            // --- Connective Tissue & Meat Proteins ---
+            {
+                q: "Name the three broad groups of muscle proteins based on solubility.",
+                a: "1. Sarcoplasmic (water/dilute salt soluble)\n2. Myofibrillar (concentrated salt soluble)\n3. Connective tissue (salt insoluble).",
+                c: "Meat: Muscle Proteins"
+            },
+            {
+                q: "What are the proportional distributions of proteins in muscle tissue?",
+                a: "Myofibrillar (60% of muscle protein, 10% of wet weight), Sarcoplasmic (20% of protein, 5% of wet weight), Connective tissue/other (20% of protein, 5% of wet weight).",
+                c: "Meat: Muscle Proteins"
+            },
+            {
+                q: "Describe the structural difference between Collagen and Elastin fibers.",
+                a: "Collagen: Straight, inextensible, non-branching triple helix.\nElastin: Branched, highly elastic.",
+                c: "Meat: Connective Tissue"
+            },
+            {
+                q: "How does moist heat cooking affect collagen vs. elastin?",
+                a: "Moist heat converts tough collagen into tender gelatin. Elastin is NOT affected by moist heat.",
+                c: "Meat: Tenderization"
+            },
+            {
+                q: "Why is animal protein digestibility superior to vegetable protein?",
+                a: "Animal protein digestibility is 95-100%, whereas vegetable protein is only 65-75%.",
+                c: "Meat: Proteins"
+            },
+            {
+                q: "Name the 9 essential amino acids found in meat.",
+                a: "Histidine, Isoleucine, Leucine, Lysine, Methionine, Phenylalanine, Threonine, Tryptophan, Valine.",
+                c: "Meat: Amino Acids"
+            },
+
+            // --- Fats, Rancidity & Chemistry ---
+            {
+                q: "Why is pork fat more susceptible to oxidation and rancidity than beef or lamb fat?",
+                a: "Pork fat contains higher amounts of unsaturated fatty acids, containing double bonds susceptible to breaking.",
+                c: "Meat: Fats & Rancidity"
+            },
+            {
+                q: "What chemical additives/components accelerate and slow rancidity development?",
+                a: "Accelerate: Metals and sodium from salt.\nSlow: Nitrites and antioxidants (ascorbic acid, citric acid, tocopherol).",
+                c: "Meat: Fats & Rancidity"
+            },
+            {
+                q: "Identify the three essential fatty acids found in meat fats.",
+                a: "Linoleic acid, linolenic acid, and arachidonic acid.",
+                c: "Meat: Essential Fats"
+            },
+            {
+                q: "Compare the bonds and states of Saturated, Unsaturated, and Trans fats.",
+                a: "Saturated: No double bonds, solid at room temp, raises LDL.\nUnsaturated: One or more double bonds, liquid at room temp.\nTrans: Unsaturated fats with altered bond geometry that raise LDL and lower HDL.",
+                c: "Meat: Fat Types"
+            },
+            {
+                q: "Contrast High-Density Lipoprotein (HDL) and Low-Density Lipoprotein (LDL).",
+                a: "HDL: 'Good' cholesterol, carries cholesterol back to liver.\nLDL: 'Bad' cholesterol, deposits fats in artery walls (plaque).",
+                c: "Meat: Lipoproteins"
+            },
+            {
+                q: "What are the major physiological functions of cholesterol in the body?",
+                a: "Forming cell membranes/nervous tissue, synthesizing bile salts, producing hormones, and creating Vitamin D.",
+                c: "Meat: Cholesterol"
+            },
+            {
+                q: "Contrast the carbohydrate level of fresh meat vs. processed meat.",
+                a: "Processed meat has higher carbohydrates due to added sugars and starches/fillers during formulation.",
+                c: "Meat: Carbohydrates"
+            },
+
+            // --- Pigments, Color & pH ---
+            {
+                q: "Name the predominant pigment in red meat and its percentage of meat pigment.",
+                a: "Myoglobin (responsible for 80% of meat pigment). Hemoglobin accounts for the remaining ~20%.",
+                c: "Meat: Pigments"
+            },
+            {
+                q: "Identify the 3 primary fresh meat pigments and their corresponding chemical states.",
+                a: "1. Deoxymyoglobin: Fe++ (Ferrous), no oxygen -> Purplish-red.\n2. Oxymyoglobin: Fe++ (Ferrous) + O2 -> Bright red.\n3. Metmyoglobin: Fe+++ (Ferric, oxidized) -> Brown.",
+                c: "Meat: Pigment States"
+            },
+            {
+                q: "What is the typical muscle pH decline timeline in post-mortem meat?",
+                a: "Declines from 7.0 - 7.2 down to 5.5 - 5.7 over 24 hours via post-mortem glycolysis (converting glycogen to lactic acid).",
+                c: "Meat: Color & pH"
+            },
+            {
+                q: "What causes Dark, Firm, and Dry (DFD) meat condition?",
+                a: "Depleted muscle glycogen before slaughter due to chronic stress. The pH remains high (>5.7 - 6.0), reflecting less light.",
+                c: "Meat: Color & pH"
+            },
+            {
+                q: "Define Water Holding Capacity (WHC) and explain its relationship with pH.",
+                a: "The ability of meat to retain water. Low pH (close to protein isoelectric point) reduces WHC, leading to pale color and high drip loss.",
+                c: "Meat: WHC"
+            },
+            {
+                q: "How does high pH affect the cooking performance of meat?",
+                a: "Creates a 'hard to cook' defect; myoglobin is more heat-stable, requiring higher temperatures to turn brown, appearing raw/pink even when safe.",
+                c: "Meat: Cooking Effects"
+            },
+            {
+                q: "What is 'Nitrosylhemochrome'?",
+                a: "The stable pink pigment formed in cured meats when nitric oxide (from sodium nitrite) binds to myoglobin and is cooked.",
+                c: "Meat: Curing Chemistry"
+            },
+            {
+                q: "Explain why sliced roast beef or ham sometimes displays a rainbow 'iridescence' color.",
+                a: "Light diffraction caused by the structure of muscle fibers that have been pulled out of alignment during slicing. It is a physical defect, not microbiological.",
+                c: "Meat: Defects"
+            },
+            {
+                q: "What gas is sometimes added to modified atmosphere packaging to produce a persistent bright dark-red color?",
+                a: "Carbon monoxide (CO), which binds very tightly to myoglobin.",
+                c: "Meat: Packaging"
+            },
+            {
+                q: "How can you differentiate a safe chemical color change from microbial spoilage?",
+                a: "Spoilage is accompanied by off-odors, a sticky/tacky texture to the touch, or slime.",
+                c: "Meat: Spoilage"
+            }
+        ];
+
+        let currentIndex = 0;
+        let isAnswered = false;
+
+        function updateCard() {
+            const card = flashcards[currentIndex];
+            document.getElementById('card-index').innerText = `${currentIndex + 1} / ${flashcards.length}`;
+            
+            // Set Categories
+            document.getElementById('q-category').innerText = card.c;
+            document.getElementById('a-category').innerText = card.c;
+
+            // Set Text
+            document.getElementById('q-text').innerText = card.q;
+            document.getElementById('a-text').innerText = card.a;
+
+            const progressPercent = ((currentIndex + 1) / flashcards.length) * 100;
+            document.getElementById('progress-fill').style.width = `${progressPercent}%`;
+
+            if (isAnswered) {
+                document.body.classList.add('show-answer');
+            } else {
+                document.body.classList.remove('show-answer');
+            }
+        }
+
+        function toggleAnswer() {
+            isAnswered = !isAnswered;
+            updateCard();
+        }
+
+        function nextCard(event) {
+            event.stopPropagation(); // Stop click from triggering toggleAnswer
+            if (currentIndex < flashcards.length - 1) {
+                currentIndex++;
+                isAnswered = false;
+                updateCard();
+            }
+        }
+
+        function prevCard(event) {
+            event.stopPropagation(); // Stop click from triggering toggleAnswer
+            if (currentIndex > 0) {
+                currentIndex--;
+                isAnswered = false;
+                updateCard();
+            }
+        }
+
+        // Keyboard Navigation support
+        document.addEventListener('keydown', (e) => {
+            if (e.key === ' ' || e.key === 'Enter') {
+                toggleAnswer();
+            } else if (e.key === 'ArrowRight') {
+                nextCard(new Event('click'));
+            } else if (e.key === 'ArrowLeft') {
+                prevCard(new Event('click'));
+            }
+        });
+
+        // Initialize App
+        updateCard();
+    </script>
+</body>
+</html>
